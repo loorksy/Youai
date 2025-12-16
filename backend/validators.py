@@ -7,18 +7,16 @@ from typing import Dict, Any
 def validate_gemini_key(key: str) -> Dict[str, Any]:
     """
     يتحقق من صحة مفتاح Gemini API
-    يجب أن يبدأ بـ AIzaSy ويكون طوله 39 حرف
     """
     if not key:
         return {"valid": False, "error": "المفتاح فارغ"}
     
-    # Gemini keys تبدأ بـ AIzaSy وطولها 39 حرف
-    pattern = r'^AIzaSy[A-Za-z0-9_-]{32}$'
-    
-    if not re.match(pattern, key):
+    # Gemini keys عادة تبدأ بـ AIzaSy وطولها 39 حرف، لكن قد تختلف
+    # نتحقق فقط من أنه يبدأ بـ AIza ويكون طوله معقول
+    if not key.startswith('AIza') or len(key) < 30:
         return {
             "valid": False, 
-            "error": "مفتاح Gemini غير صحيح. يجب أن يبدأ بـ AIzaSy ويكون طوله 39 حرف"
+            "error": "مفتاح Gemini غير صحيح. يجب أن يبدأ بـ AIza"
         }
     
     return {"valid": True, "error": None}
