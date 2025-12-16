@@ -199,16 +199,73 @@ export default function CreateVideo() {
               </Label>
               <Select
                 value={formData.ai_generator}
-                onValueChange={(value) => setFormData({ ...formData, ai_generator: value })}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, ai_generator: value });
+                  if (value === 'sora2' && videoDuration > 60) {
+                    setVideoDuration(60);
+                  }
+                }}
               >
                 <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white text-right font-tajawal" data-testid="ai-generator-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sora2">Sora 2 (OpenAI)</SelectItem>
-                  <SelectItem value="veo3">Veo 3 (Google)</SelectItem>
+                  <SelectItem value="sora2">Sora 2 (OpenAI) - حتى 60 ثانية</SelectItem>
+                  <SelectItem value="veo3">Veo 3 (Google) - حتى 2 دقيقة</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-right block font-tajawal text-zinc-300">
+                  مدة الفيديو
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={autoDuration}
+                    onCheckedChange={setAutoDuration}
+                    data-testid="auto-duration-switch"
+                  />
+                  <span className="text-sm text-zinc-400 font-tajawal">تلقائي</span>
+                </div>
+              </div>
+              
+              {!autoDuration && (
+                <>
+                  <div className="bg-zinc-800/30 rounded-lg p-4 border border-zinc-700/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sliders className="h-4 w-4 text-orange-500" />
+                      <div className="flex-1 text-right">
+                        <span className="text-2xl font-manrope font-bold text-white">{videoDuration}</span>
+                        <span className="text-zinc-400 font-tajawal mr-2">ثانية</span>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min="3"
+                      max={getMaxDuration()}
+                      step="1"
+                      value={videoDuration}
+                      onChange={(e) => {
+                        setVideoDuration(parseInt(e.target.value));
+                        setFormData({ ...formData, video_length: `${e.target.value} ثانية` });
+                      }}
+                      className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                      data-testid="duration-slider"
+                    />
+                    <div className="flex justify-between text-xs text-zinc-500 font-tajawal mt-2">
+                      <span>3 ثواني</span>
+                      <span>{getMaxDuration()} ثانية</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                    <p className="text-sm text-blue-400 font-tajawal text-right">
+                      💡 <strong>نصيحة:</strong> {formData.ai_generator === 'sora2' ? 'Sora2 يدعم حتى 60 ثانية' : 'Veo3 يدعم حتى 120 ثانية (دقيقتين)'}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
