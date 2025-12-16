@@ -15,6 +15,7 @@ export default function Settings() {
   const [apiKeys, setApiKeys] = useState({
     gemini: { api_key: '' },
     kie_ai: { api_key: '' },
+    openrouter: { api_key: '' },
     youtube: { client_id: '', client_secret: '', redirect_uri: '' },
     google_drive: { credentials_json: '' },
     google_sheets: { sheet_id: '' }
