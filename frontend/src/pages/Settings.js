@@ -290,6 +290,14 @@ export default function Settings() {
                   placeholder="GOCSPX-..."
                   data-testid="youtube-client-secret-input"
                 />
+                <a 
+                  href="https://console.cloud.google.com/apis/credentials" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 text-sm font-tajawal inline-flex items-center gap-1"
+                >
+                  🔗 احصل على البيانات من Google Cloud Console
+                </a>
               </div>
               <div className="flex gap-3">
                 <Button
