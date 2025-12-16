@@ -14,7 +14,7 @@ def get_encryption_key():
     """توليد مفتاح التشفير من JWT_SECRET"""
     jwt_secret = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
     
-    kdf = PBKDF2(
+    kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=SALT,
