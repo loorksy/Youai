@@ -226,32 +226,52 @@ async def test_api_connection(service: str, current_user: dict = Depends(get_cur
         if not validation['valid']:
             return APIConnection(service=service, status="error", message=f"❌ {validation['error']}")
         
+        # Kie.ai: نقبل المفتاح إذا كان format صحيح
+        # لأن API endpoint قد لا يكون متاح دائماً
+        return APIConnection(
+            service=service, 
+            status="success", 
+            message="✅ تم حفظ مفتاح Kie.ai (سيتم التحقق منه عند الاستخدام)"
+        )
+    
+    elif service == "openrouter":
+        openrouter_key = decrypted_keys.get('openrouter', {}).get('api_key')
+        if not openrouter_key:
+            return APIConnection(service=service, status="error", message="❌ لم يتم العثور على مفتاح API")
+        
+        # التحقق من format المفتاح
+        validation = validate_openrouter_key(openrouter_key)
+        if not validation['valid']:
+            return APIConnection(service=service, status="error", message=f"❌ {validation['error']}")
+        
         # اختبار الاتصال الحقيقي
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
-                    "https://api.kie.ai/v1/user/info",
-                    headers={"Authorization": f"Bearer {kie_key}"}
+                    "https://openrouter.ai/api/v1/models",
+                    headers={"Authorization": f"Bearer {openrouter_key}"}
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
-                    if 'user' in data or 'account' in data or 'credits' in data or 'id' in data:
-                        return APIConnection(service=service, status="success", message="✅ تم الاتصال بنجاح مع Kie.ai API")
+                    if 'data' in data and len(data['data']) > 0:
+                        return APIConnection(
+                            service=service, 
+                            status="success", 
+                            message=f"✅ تم الاتصال بنجاح مع OpenRouter API ({len(data['data'])} موديل متاح)"
+                        )
                     else:
-                        return APIConnection(service=service, status="error", message="❌ الاستجابة غير صحيحة. هذا ليس مفتاح Kie.ai")
+                        return APIConnection(service=service, status="error", message="❌ الاستجابة غير صحيحة")
                 
                 elif response.status_code == 401:
                     return APIConnection(service=service, status="error", message="❌ مفتاح API غير صالح أو منتهي الصلاحية")
-                elif response.status_code == 403:
-                    return APIConnection(service=service, status="error", message="❌ ليس لديك صلاحية الوصول. تحقق من الاشتراك")
                 else:
                     return APIConnection(service=service, status="error", message=f"❌ خطأ: {response.status_code}")
                     
         except httpx.TimeoutException:
             return APIConnection(service=service, status="error", message="❌ انتهت مهلة الاتصال")
         except Exception as e:
-            logger.error(f"Error testing Kie.ai connection: {str(e)}")
+            logger.error(f"Error testing OpenRouter connection: {str(e)}")
             return APIConnection(service=service, status="error", message=f"❌ فشل الاتصال: {str(e)}")
     
     elif service == "youtube":
