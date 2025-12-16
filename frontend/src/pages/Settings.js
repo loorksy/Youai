@@ -20,6 +20,41 @@ export default function Settings() {
     google_sheets: { sheet_id: '' }
   });
 
+  // تحميل المفاتيح عند تحميل الصفحة
+  useEffect(() => {
+    loadSavedApiKeys();
+  }, []);
+
+  const loadSavedApiKeys = async () => {
+    try {
+      const response = await api.settings.getSavedKeys();
+      
+      if (response.data && Object.keys(response.data).length > 0) {
+        // تحديث الحقول بالمفاتيح المحفوظة
+        setApiKeys(prevKeys => ({
+          ...prevKeys,
+          ...response.data
+        }));
+        
+        // اختبار الاتصال تلقائياً للمفاتيح الموجودة
+        Object.keys(response.data).forEach(service => {
+          const credentials = response.data[service];
+          const hasData = Object.values(credentials).some(val => val && val !== '');
+          
+          if (hasData) {
+            setTimeout(() => {
+              handleTestConnection(service);
+            }, 1000);
+          }
+        });
+        
+        toast.success('تم تحميل الإعدادات المحفوظة');
+      }
+    } catch (error) {
+      console.error('فشل تحميل المفاتيح المحفوظة:', error);
+    }
+  };
+
   const handleInputChange = (service, field, value) => {
     setApiKeys(prev => ({
       ...prev,
