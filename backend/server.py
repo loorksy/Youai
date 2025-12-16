@@ -131,7 +131,7 @@ async def test_api_connection(service: str, current_user: dict = Depends(get_cur
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key={gemini_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}",
                     json={
                         "contents": [{
                             "parts": [{"text": "test"}]
