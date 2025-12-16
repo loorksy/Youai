@@ -29,6 +29,10 @@ export const api = {
   },
   campaigns: {
     getAll: () => axios.get(`${API}/campaigns`)
+  },
+  providers: {
+    getModels: (provider) => axios.get(`${API}/providers/models?provider=${provider}`),
+    getPurposes: () => axios.get(`${API}/providers/purposes`)
   }
 };
 
