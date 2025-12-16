@@ -20,7 +20,8 @@ import httpx
 from apscheduler.schedulers.background import BackgroundScheduler
 from validators import (
     validate_gemini_key, 
-    validate_kie_key, 
+    validate_kie_key,
+    validate_openrouter_key,
     validate_youtube_credentials,
     validate_sheet_id
 )
