@@ -28,11 +28,11 @@ def validate_kie_key(key: str) -> Dict[str, Any]:
     if not key:
         return {"valid": False, "error": "المفتاح فارغ"}
     
-    # Kie.ai keys عادة تبدأ بـ kie_ أو تكون طويلة
-    if not (key.startswith('kie_') or len(key) >= 32):
+    # Kie.ai keys: قبول أي مفتاح طوله أكثر من 20 حرف
+    if len(key) < 20:
         return {
             "valid": False,
-            "error": "مفتاح Kie.ai غير صحيح. يجب أن يبدأ بـ kie_ أو يكون طوله 32 حرف على الأقل"
+            "error": "مفتاح Kie.ai قصير جداً. يجب أن يكون 20 حرف على الأقل"
         }
     
     return {"valid": True, "error": None}
