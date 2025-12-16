@@ -605,56 +605,130 @@ async def get_trending_topics(current_user: dict = Depends(get_current_user)):
     
     return trends
 
+def get_default_trends_by_keyword(keyword: str):
+    """إرجاع ترندات افتراضية بناءً على الكلمة المفتاحية"""
+    trends_database = {
+        "طبخ": [
+            TrendingTopic(topic=f"أفضل وصفات {keyword} السريعة", views=850000, engagement_rate=9.2, related_keywords=["وصفات", "طبخ", "سريع", keyword]),
+            TrendingTopic(topic=f"أسرار {keyword} الاحترافي", views=720000, engagement_rate=8.7, related_keywords=["أسرار", keyword, "احترافي"]),
+        ],
+        "تقنية": [
+            TrendingTopic(topic=f"أحدث تطورات {keyword}", views=1200000, engagement_rate=8.5, related_keywords=[keyword, "تقنية", "تطورات"]),
+            TrendingTopic(topic=f"مراجعة شاملة لـ {keyword}", views=980000, engagement_rate=7.8, related_keywords=[keyword, "مراجعة", "شرح"]),
+        ],
+        "ألعاب": [
+            TrendingTopic(topic=f"أفضل {keyword} في 2025", views=1500000, engagement_rate=9.5, related_keywords=[keyword, "ألعاب", "2025"]),
+        ],
+    }
+    
+    keyword_lower = keyword.lower()
+    for key, trends in trends_database.items():
+        if keyword_lower in key.lower() or key.lower() in keyword_lower:
+            return trends
+    
+    return [
+        TrendingTopic(topic=f"دليل شامل عن {keyword}", views=500000, engagement_rate=7.5, related_keywords=[keyword, "شرح", "تعليم", "دليل"]),
+        TrendingTopic(topic=f"أفضل نصائح في {keyword}", views=350000, engagement_rate=6.8, related_keywords=[keyword, "نصائح", "مبتدئين"]),
+    ]
+
 @api_router.get("/trends/search")
 async def search_trending_topics(keyword: str, current_user: dict = Depends(get_current_user)):
+    """البحث عن ترندات باستخدام YouTube Data API الحقيقي"""
     user = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
     api_keys = user.get('api_keys', {})
     
-    youtube_client_id = api_keys.get('youtube', {}).get('client_id') or os.getenv('YOUTUBE_CLIENT_ID')
+    # فك تشفير المفاتيح
+    decrypted_keys = {}
+    for service, credentials in api_keys.items():
+        try:
+            decrypted_keys[service] = decrypt_credentials(credentials)
+        except:
+            decrypted_keys[service] = {}
     
-    if not youtube_client_id:
-        all_trends = {
-            "طبخ": [
-                TrendingTopic(topic="وصفات سريعة للعشاء", views=850000, engagement_rate=9.2, related_keywords=["طبخ", "وصفات", "عشاء", "سريع"]),
-                TrendingTopic(topic="حلويات صحية", views=720000, engagement_rate=8.7, related_keywords=["حلويات", "صحي", "دايت"]),
-                TrendingTopic(topic="أسرار الطبخ الشرقي", views=650000, engagement_rate=8.3, related_keywords=["طبخ شرقي", "أسرار", "مطبخ"])
-            ],
-            "تقنية": [
-                TrendingTopic(topic="الذكاء الاصطناعي في 2025", views=1500000, engagement_rate=8.5, related_keywords=["AI", "تكنولوجيا", "مستقبل"]),
-                TrendingTopic(topic="مراجعة أحدث الهواتف", views=980000, engagement_rate=7.8, related_keywords=["هواتف", "مراجعة", "تقنية"]),
-                TrendingTopic(topic="برمجة التطبيقات", views=760000, engagement_rate=9.1, related_keywords=["برمجة", "تطبيقات", "كود"])
-            ],
-            "ألعاب": [
-                TrendingTopic(topic="أفضل ألعاب 2025", views=1200000, engagement_rate=9.5, related_keywords=["ألعاب", "2025", "مراجعة"]),
-                TrendingTopic(topic="استراتيجيات الفوز", views=890000, engagement_rate=8.9, related_keywords=["استراتيجية", "فوز", "نصائح"]),
-                TrendingTopic(topic="بث مباشر للألعاب", views=670000, engagement_rate=8.2, related_keywords=["بث", "ألعاب", "لايف"])
-            ]
-        }
-        
-        keyword_lower = keyword.lower()
-        for key in all_trends.keys():
-            if keyword_lower in key.lower() or key.lower() in keyword_lower:
-                return all_trends[key]
-        
-        return [
-            TrendingTopic(
-                topic=f"ترندات {keyword}",
-                views=500000,
-                engagement_rate=7.5,
-                related_keywords=[keyword, "ترندات", "محتوى"]
+    # محاولة الحصول على YouTube API key
+    youtube_key = decrypted_keys.get('youtube', {}).get('api_key') or os.getenv('YOUTUBE_API_KEY')
+    
+    if not youtube_key:
+        logger.info("No YouTube API key found, using default trends")
+        return get_default_trends_by_keyword(keyword)
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # استخدام YouTube Data API - Search endpoint
+            search_response = await client.get(
+                "https://www.googleapis.com/youtube/v3/search",
+                params={
+                    "part": "snippet",
+                    "q": keyword,
+                    "type": "video",
+                    "order": "viewCount",
+                    "maxResults": 10,
+                    "key": youtube_key,
+                    "regionCode": "SA",
+                    "relevanceLanguage": "ar"
+                },
             )
-        ]
-    
-    trends = [
-        TrendingTopic(
-            topic=f"أفضل محتوى عن {keyword}",
-            views=800000,
-            engagement_rate=8.0,
-            related_keywords=[keyword, "محتوى", "فيديو"]
-        )
-    ]
-    
-    return trends
+            
+            if search_response.status_code != 200:
+                logger.warning(f"YouTube API error: {search_response.status_code}")
+                return get_default_trends_by_keyword(keyword)
+            
+            search_data = search_response.json()
+            video_ids = [item['id']['videoId'] for item in search_data.get('items', [])]
+            
+            if not video_ids:
+                return get_default_trends_by_keyword(keyword)
+            
+            # جلب إحصائيات الفيديوهات
+            stats_response = await client.get(
+                "https://www.googleapis.com/youtube/v3/videos",
+                params={
+                    "part": "statistics,snippet",
+                    "id": ','.join(video_ids),
+                    "key": youtube_key
+                }
+            )
+            
+            if stats_response.status_code != 200:
+                return get_default_trends_by_keyword(keyword)
+            
+            stats_data = stats_response.json()
+            trends = []
+            
+            for item in stats_data.get('items', []):
+                snippet = item.get('snippet', {})
+                statistics = item.get('statistics', {})
+                
+                views = int(statistics.get('viewCount', 0))
+                likes = int(statistics.get('likeCount', 0))
+                comments = int(statistics.get('commentCount', 0))
+                
+                engagement_rate = 0.0
+                if views > 0:
+                    engagement_rate = ((likes + comments) / views) * 100
+                
+                keywords = []
+                if snippet.get('tags'):
+                    keywords = snippet['tags'][:5]
+                else:
+                    title_words = snippet.get('title', '').split()
+                    keywords = [w for w in title_words if len(w) > 3][:5]
+                
+                trends.append(TrendingTopic(
+                    topic=snippet.get('title', ''),
+                    views=views,
+                    engagement_rate=round(engagement_rate, 2),
+                    related_keywords=keywords
+                ))
+            
+            return trends
+            
+    except httpx.TimeoutException:
+        logger.error("YouTube API timeout")
+        return get_default_trends_by_keyword(keyword)
+    except Exception as e:
+        logger.error(f"Error fetching YouTube trends: {str(e)}")
+        return get_default_trends_by_keyword(keyword)
 
 @api_router.get("/campaigns")
 async def get_campaigns(current_user: dict = Depends(get_current_user)):
