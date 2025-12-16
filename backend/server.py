@@ -120,8 +120,12 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/settings/api-keys")
 async def update_api_keys(api_key_update: APIKeyUpdate, current_user: dict = Depends(get_current_user)):
+    """حفظ مفاتيح API مع التشفير"""
     api_keys = current_user.get('api_keys', {})
-    api_keys[api_key_update.service] = api_key_update.credentials
+    
+    # تشفير البيانات قبل الحفظ
+    encrypted_credentials = encrypt_credentials(api_key_update.credentials)
+    api_keys[api_key_update.service] = encrypted_credentials
     
     await db.users.update_one(
         {"id": current_user['id']},
@@ -129,6 +133,30 @@ async def update_api_keys(api_key_update: APIKeyUpdate, current_user: dict = Dep
     )
     
     return {"message": f"تم تحديث بيانات {api_key_update.service} بنجاح"}
+
+@api_router.get("/settings/api-keys")
+async def get_saved_api_keys(current_user: dict = Depends(get_current_user)):
+    """جلب المفاتيح المحفوظة مع فك التشفير والإخفاء"""
+    api_keys = current_user.get('api_keys', {})
+    
+    if not api_keys:
+        return {}
+    
+    # فك التشفير
+    decrypted_keys = {}
+    for service, credentials in api_keys.items():
+        try:
+            decrypted_keys[service] = decrypt_credentials(credentials)
+        except Exception as e:
+            logger.error(f"Error decrypting {service} keys: {str(e)}")
+            decrypted_keys[service] = {}
+    
+    # إخفاء المفاتيح للعرض
+    masked_keys = {}
+    for service, creds in decrypted_keys.items():
+        masked_keys[service] = mask_credentials(creds)
+    
+    return masked_keys
 
 @api_router.post("/settings/test-connection")
 async def test_api_connection(service: str, current_user: dict = Depends(get_current_user)):
