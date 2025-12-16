@@ -22,11 +22,17 @@ export default function CreateVideo() {
     background_music: false,
     character_image_url: null,
     schedule_type: 'immediate',
-    scheduled_time: null
+    scheduled_time: null,
+    content_provider: 'gemini',
+    selected_model: 'gemini-2.5-flash',
+    model_purpose: 'content_generation'
   });
   const [characterImage, setCharacterImage] = useState(null);
   const [videoDuration, setVideoDuration] = useState(60);
   const [autoDuration, setAutoDuration] = useState(true);
+  const [availableModels, setAvailableModels] = useState([]);
+  const [availablePurposes, setAvailablePurposes] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(false);
 
   const handleCharacterImageUpload = (event) => {
     const file = event.target.files[0];
