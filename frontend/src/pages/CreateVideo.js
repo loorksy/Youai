@@ -127,6 +127,78 @@ export default function CreateVideo() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-xl font-cairo font-bold text-white">
+              اختيار مزود المحتوى والنموذج
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-right block font-tajawal text-zinc-300">
+                  مزود المحتوى
+                </Label>
+                <Select
+                  value={formData.content_provider}
+                  onValueChange={(value) => setFormData({ ...formData, content_provider: value })}
+                >
+                  <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white text-right font-tajawal">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gemini">Google Gemini</SelectItem>
+                    <SelectItem value="openrouter">OpenRouter (جميع النماذج)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-right block font-tajawal text-zinc-300">
+                  النموذج المستخدم
+                </Label>
+                <Select
+                  value={formData.selected_model}
+                  onValueChange={(value) => setFormData({ ...formData, selected_model: value })}
+                  disabled={loadingModels}
+                >
+                  <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white text-right font-tajawal">
+                    <SelectValue placeholder={loadingModels ? "جاري التحميل..." : "اختر النموذج"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name} - {model.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-right block font-tajawal text-zinc-300">
+                  وظيفة النموذج
+                </Label>
+                <Select
+                  value={formData.model_purpose}
+                  onValueChange={(value) => setFormData({ ...formData, model_purpose: value })}
+                >
+                  <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white text-right font-tajawal">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePurposes.map((purpose) => (
+                      <SelectItem key={purpose.id} value={purpose.id}>
+                        {purpose.name} - {purpose.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-xl font-cairo font-bold text-white">
               معلومات المحتوى
             </CardTitle>
           </CardHeader>
