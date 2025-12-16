@@ -101,7 +101,16 @@ export default function Layout() {
               >
                 {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
-              <div className="flex-1 lg:hidden"></div>
+              <div className="flex-1"></div>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500 font-cairo transition-all duration-300"
+                data-testid="navbar-logout-button"
+              >
+                <LogOut className="ml-2 h-4 w-4" />
+                تسجيل الخروج
+              </Button>
             </div>
           </header>
 
