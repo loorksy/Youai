@@ -193,8 +193,9 @@ async def test_api_connection(service: str, current_user: dict = Depends(get_cur
                 # الخطوة 3: التحقق من محتوى الاستجابة
                 if response.status_code == 200:
                     data = response.json()
-                    if 'candidates' in data or 'contents' in data:
-                        return APIConnection(service=service, status="success", message="✅ تم الاتصال بنجاح مع Gemini API")
+                    if 'models' in data and len(data['models']) > 0:
+                        models_count = len(data['models'])
+                        return APIConnection(service=service, status="success", message=f"✅ تم الاتصال بنجاح مع Gemini API ({models_count} نموذج متاح)")
                     else:
                         return APIConnection(service=service, status="error", message="❌ الاستجابة غير صحيحة. هذا ليس مفتاح Gemini")
                 
