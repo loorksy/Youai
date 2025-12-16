@@ -846,6 +846,123 @@ async def get_model_purposes():
         ]
     }
 
+@api_router.post("/chat/test")
+async def test_chat(
+    message: str,
+    provider: str = "gemini",
+    model: str = "gemini-2.5-flash",
+    current_user: dict = Depends(get_current_user)
+):
+    """اختبار الدردشة مع الذكاء الاصطناعي"""
+    user = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
+    api_keys = user.get('api_keys', {})
+    
+    # فك تشفير المفاتيح
+    decrypted_keys = {}
+    for service, credentials in api_keys.items():
+        try:
+            decrypted_keys[service] = decrypt_credentials(credentials)
+        except:
+            decrypted_keys[service] = {}
+    
+    try:
+        if provider == "gemini":
+            gemini_key = decrypted_keys.get('gemini', {}).get('api_key') or os.getenv('GEMINI_API_KEY')
+            if not gemini_key:
+                return {
+                    "success": False,
+                    "response": "❌ لم يتم العثور على مفتاح Gemini API. يرجى إضافته في الإعدادات.",
+                    "error": "missing_key"
+                }
+            
+            try:
+                chat = LlmChat(
+                    api_key=gemini_key,
+                    session_id=f"test-chat-{current_user['id']}",
+                    system_message="أنت مساعد ذكي ومفيد. أجب بشكل موجز ومباشر."
+                ).with_model("gemini", model)
+                
+                response = await chat.send_message(UserMessage(text=message))
+                
+                return {
+                    "success": True,
+                    "response": response,
+                    "provider": provider,
+                    "model": model
+                }
+            except Exception as e:
+                logger.error(f"Gemini chat error: {str(e)}")
+                return {
+                    "success": False,
+                    "response": f"❌ خطأ في الاتصال بـ Gemini: {str(e)}",
+                    "error": "api_error"
+                }
+        
+        elif provider == "openrouter":
+            openrouter_key = decrypted_keys.get('openrouter', {}).get('api_key')
+            if not openrouter_key:
+                return {
+                    "success": False,
+                    "response": "❌ لم يتم العثور على مفتاح OpenRouter API. يرجى إضافته في الإعدادات.",
+                    "error": "missing_key"
+                }
+            
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {openrouter_key}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": model,
+                            "messages": [
+                                {"role": "system", "content": "أنت مساعد ذكي ومفيد. أجب بشكل موجز ومباشر."},
+                                {"role": "user", "content": message}
+                            ]
+                        }
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        ai_response = data['choices'][0]['message']['content']
+                        return {
+                            "success": True,
+                            "response": ai_response,
+                            "provider": provider,
+                            "model": model
+                        }
+                    else:
+                        error_data = response.json()
+                        return {
+                            "success": False,
+                            "response": f"❌ خطأ: {error_data.get('error', {}).get('message', 'خطأ غير معروف')}",
+                            "error": "api_error"
+                        }
+            except Exception as e:
+                logger.error(f"OpenRouter chat error: {str(e)}")
+                return {
+                    "success": False,
+                    "response": f"❌ خطأ في الاتصال بـ OpenRouter: {str(e)}",
+                    "error": "api_error"
+                }
+        
+        else:
+            return {
+                "success": False,
+                "response": "❌ مزود غير مدعوم",
+                "error": "invalid_provider"
+            }
+    
+    except Exception as e:
+        logger.error(f"Chat test error: {str(e)}")
+        return {
+            "success": False,
+            "response": f"❌ خطأ: {str(e)}",
+            "error": "unknown_error"
+        }
+
 @api_router.get("/")
 async def root():
     return {"message": "مرحباً بك في YouAI API"}
