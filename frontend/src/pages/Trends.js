@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 export default function Trends() {
   const [trends, setTrends] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +25,25 @@ export default function Trends() {
       toast.error('فشل تحميل الترندات');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchKeyword.trim()) {
+      toast.error('يرجى إدخال كلمة بحث');
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const response = await api.trends.search(searchKeyword);
+      setTrends(response.data);
+      toast.success(`تم العثور على ${response.data.length} ترند`);
+    } catch (error) {
+      toast.error('فشل البحث عن الترندات');
+    } finally {
+      setSearching(false);
     }
   };
 
