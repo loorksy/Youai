@@ -770,6 +770,81 @@ async def get_campaigns(current_user: dict = Depends(get_current_user)):
     
     return campaigns
 
+@api_router.get("/providers/models")
+async def get_provider_models(provider: str, current_user: dict = Depends(get_current_user)):
+    """الحصول على قائمة Models المتاحة من Provider"""
+    
+    if provider == "gemini":
+        return {
+            "models": [
+                {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "الأسرع والأرخص"},
+                {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "description": "الأقوى والأكثر دقة"},
+                {"id": "gemini-pro", "name": "Gemini Pro", "description": "نموذج متوازن"},
+            ]
+        }
+    
+    elif provider == "openrouter":
+        user = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
+        api_keys = user.get('api_keys', {})
+        
+        # فك تشفير المفاتيح
+        decrypted_keys = {}
+        for service, credentials in api_keys.items():
+            try:
+                decrypted_keys[service] = decrypt_credentials(credentials)
+            except:
+                decrypted_keys[service] = {}
+        
+        openrouter_key = decrypted_keys.get('openrouter', {}).get('api_key')
+        
+        if not openrouter_key:
+            return {
+                "models": [
+                    {"id": "anthropic/claude-3.5-sonnet", "name": "Claude 3.5 Sonnet", "description": "الأفضل للكتابة الإبداعية"},
+                    {"id": "openai/gpt-4-turbo", "name": "GPT-4 Turbo", "description": "قوي ومتنوع"},
+                    {"id": "google/gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "سريع ورخيص"},
+                    {"id": "meta-llama/llama-3.3-70b", "name": "Llama 3.3 70B", "description": "مفتوح المصدر"},
+                ]
+            }
+        
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    "https://openrouter.ai/api/v1/models",
+                    headers={"Authorization": f"Bearer {openrouter_key}"}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    models = []
+                    for model in data.get('data', [])[:20]:
+                        models.append({
+                            "id": model['id'],
+                            "name": model.get('name', model['id']),
+                            "description": f"Context: {model.get('context_length', 'N/A')}"
+                        })
+                    return {"models": models}
+        except Exception as e:
+            logger.error(f"Error fetching OpenRouter models: {str(e)}")
+        
+        return {"models": []}
+    
+    return {"models": []}
+
+@api_router.get("/providers/purposes")
+async def get_model_purposes():
+    """الحصول على قائمة وظائف Models"""
+    return {
+        "purposes": [
+            {"id": "content_generation", "name": "إنشاء المحتوى", "description": "كتابة السيناريو والوصف والعنوان"},
+            {"id": "creative_writing", "name": "الكتابة الإبداعية", "description": "قصص وروايات وشعر"},
+            {"id": "technical_writing", "name": "الكتابة التقنية", "description": "شروحات ودروس تقنية"},
+            {"id": "marketing", "name": "التسويق", "description": "محتوى إعلاني وترويجي"},
+            {"id": "educational", "name": "تعليمي", "description": "دروس ومحتوى تعليمي"},
+            {"id": "entertainment", "name": "ترفيهي", "name": "محتوى كوميدي وترفيهي"},
+        ]
+    }
+
 @api_router.get("/")
 async def root():
     return {"message": "مرحباً بك في YouAI API"}
