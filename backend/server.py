@@ -532,6 +532,57 @@ async def get_trending_topics(current_user: dict = Depends(get_current_user)):
     
     return trends
 
+@api_router.get("/trends/search")
+async def search_trending_topics(keyword: str, current_user: dict = Depends(get_current_user)):
+    user = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
+    api_keys = user.get('api_keys', {})
+    
+    youtube_client_id = api_keys.get('youtube', {}).get('client_id') or os.getenv('YOUTUBE_CLIENT_ID')
+    
+    if not youtube_client_id:
+        all_trends = {
+            "طبخ": [
+                TrendingTopic(topic="وصفات سريعة للعشاء", views=850000, engagement_rate=9.2, related_keywords=["طبخ", "وصفات", "عشاء", "سريع"]),
+                TrendingTopic(topic="حلويات صحية", views=720000, engagement_rate=8.7, related_keywords=["حلويات", "صحي", "دايت"]),
+                TrendingTopic(topic="أسرار الطبخ الشرقي", views=650000, engagement_rate=8.3, related_keywords=["طبخ شرقي", "أسرار", "مطبخ"])
+            ],
+            "تقنية": [
+                TrendingTopic(topic="الذكاء الاصطناعي في 2025", views=1500000, engagement_rate=8.5, related_keywords=["AI", "تكنولوجيا", "مستقبل"]),
+                TrendingTopic(topic="مراجعة أحدث الهواتف", views=980000, engagement_rate=7.8, related_keywords=["هواتف", "مراجعة", "تقنية"]),
+                TrendingTopic(topic="برمجة التطبيقات", views=760000, engagement_rate=9.1, related_keywords=["برمجة", "تطبيقات", "كود"])
+            ],
+            "ألعاب": [
+                TrendingTopic(topic="أفضل ألعاب 2025", views=1200000, engagement_rate=9.5, related_keywords=["ألعاب", "2025", "مراجعة"]),
+                TrendingTopic(topic="استراتيجيات الفوز", views=890000, engagement_rate=8.9, related_keywords=["استراتيجية", "فوز", "نصائح"]),
+                TrendingTopic(topic="بث مباشر للألعاب", views=670000, engagement_rate=8.2, related_keywords=["بث", "ألعاب", "لايف"])
+            ]
+        }
+        
+        keyword_lower = keyword.lower()
+        for key in all_trends.keys():
+            if keyword_lower in key.lower() or key.lower() in keyword_lower:
+                return all_trends[key]
+        
+        return [
+            TrendingTopic(
+                topic=f"ترندات {keyword}",
+                views=500000,
+                engagement_rate=7.5,
+                related_keywords=[keyword, "ترندات", "محتوى"]
+            )
+        ]
+    
+    trends = [
+        TrendingTopic(
+            topic=f"أفضل محتوى عن {keyword}",
+            views=800000,
+            engagement_rate=8.0,
+            related_keywords=[keyword, "محتوى", "فيديو"]
+        )
+    ]
+    
+    return trends
+
 @api_router.get("/campaigns")
 async def get_campaigns(current_user: dict = Depends(get_current_user)):
     campaigns_cursor = db.campaigns.find(
