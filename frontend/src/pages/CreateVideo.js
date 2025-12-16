@@ -34,6 +34,38 @@ export default function CreateVideo() {
   const [availablePurposes, setAvailablePurposes] = useState([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
+  useEffect(() => {
+    loadModelPurposes();
+    if (formData.content_provider) {
+      loadAvailableModels(formData.content_provider);
+    }
+  }, [formData.content_provider]);
+
+  const loadAvailableModels = async (provider) => {
+    setLoadingModels(true);
+    try {
+      const response = await api.providers.getModels(provider);
+      setAvailableModels(response.data.models || []);
+      if (response.data.models && response.data.models.length > 0) {
+        setFormData(prev => ({ ...prev, selected_model: response.data.models[0].id }));
+      }
+    } catch (error) {
+      console.error('Failed to load models:', error);
+      toast.error('فشل تحميل النماذج المتاحة');
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  const loadModelPurposes = async () => {
+    try {
+      const response = await api.providers.getPurposes();
+      setAvailablePurposes(response.data.purposes || []);
+    } catch (error) {
+      console.error('Failed to load purposes:', error);
+    }
+  };
+
   const handleCharacterImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
