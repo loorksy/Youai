@@ -129,32 +129,98 @@ async def test_api_connection(service: str, current_user: dict = Depends(get_cur
             return APIConnection(service=service, status="error", message="لم يتم العثور على مفتاح API")
         
         try:
-            chat = LlmChat(
-                api_key=gemini_key,
-                session_id="test-connection",
-                system_message="You are a test assistant."
-            ).with_model("gemini", "gemini-2.5-flash")
-            
-            response = await chat.send_message(UserMessage(text="مرحباً"))
-            return APIConnection(service=service, status="success", message="الاتصال ناجح")
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key={gemini_key}",
+                    json={
+                        "contents": [{
+                            "parts": [{"text": "test"}]
+                        }]
+                    },
+                    timeout=10.0
+                )
+                
+                if response.status_code == 200:
+                    return APIConnection(service=service, status="success", message="✅ تم الاتصال بنجاح مع Gemini API")
+                elif response.status_code == 400:
+                    error_data = response.json()
+                    return APIConnection(service=service, status="error", message=f"❌ مفتاح API غير صحيح: {error_data.get('error', {}).get('message', 'خطأ غير معروف')}")
+                else:
+                    return APIConnection(service=service, status="error", message=f"❌ خطأ في الاتصال: {response.status_code}")
+        except httpx.TimeoutException:
+            return APIConnection(service=service, status="error", message="❌ انتهت مهلة الاتصال")
         except Exception as e:
-            return APIConnection(service=service, status="error", message=f"فشل الاتصال: {str(e)}")
+            return APIConnection(service=service, status="error", message=f"❌ فشل الاتصال: {str(e)}")
     
     elif service == "kie_ai":
         kie_key = api_keys.get('kie_ai', {}).get('api_key') or os.getenv('KIE_AI_API_KEY')
         if not kie_key:
             return APIConnection(service=service, status="error", message="لم يتم العثور على مفتاح API")
         
-        return APIConnection(service=service, status="success", message="مفتاح API محفوظ")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://api.kie.ai/v1/user/info",
+                    headers={"Authorization": f"Bearer {kie_key}"},
+                    timeout=10.0
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return APIConnection(service=service, status="success", message="✅ تم الاتصال بنجاح مع Kie.ai API")
+                elif response.status_code == 401:
+                    return APIConnection(service=service, status="error", message="❌ مفتاح API غير صحيح أو منتهي الصلاحية")
+                else:
+                    return APIConnection(service=service, status="error", message=f"❌ خطأ في الاتصال: {response.status_code}")
+        except httpx.TimeoutException:
+            return APIConnection(service=service, status="error", message="❌ انتهت مهلة الاتصال")
+        except Exception as e:
+            return APIConnection(service=service, status="error", message=f"❌ فشل الاتصال: {str(e)}")
     
     elif service == "youtube":
         youtube_creds = api_keys.get('youtube', {})
-        if not youtube_creds.get('client_id'):
-            return APIConnection(service=service, status="error", message="بيانات اعتماد YouTube غير مكتملة")
+        client_id = youtube_creds.get('client_id') or os.getenv('YOUTUBE_CLIENT_ID')
+        client_secret = youtube_creds.get('client_secret') or os.getenv('YOUTUBE_CLIENT_SECRET')
         
-        return APIConnection(service=service, status="success", message="بيانات الاعتماد محفوظة")
+        if not client_id or not client_secret:
+            return APIConnection(service=service, status="error", message="❌ بيانات اعتماد YouTube غير مكتملة")
+        
+        if len(client_id) < 30 or not client_id.endswith('.apps.googleusercontent.com'):
+            return APIConnection(service=service, status="error", message="❌ Client ID غير صحيح. يجب أن ينتهي بـ .apps.googleusercontent.com")
+        
+        if len(client_secret) < 20 or not client_secret.startswith('GOCSPX-'):
+            return APIConnection(service=service, status="error", message="❌ Client Secret غير صحيح. يجب أن يبدأ بـ GOCSPX-")
+        
+        return APIConnection(service=service, status="success", message="✅ بيانات اعتماد YouTube صحيحة (يتطلب OAuth2 للاتصال الكامل)")
     
-    return APIConnection(service=service, status="error", message="خدمة غير معروفة")
+    elif service == "google_drive":
+        drive_creds = api_keys.get('google_drive', {})
+        if not drive_creds.get('credentials_json'):
+            return APIConnection(service=service, status="error", message="❌ لم يتم رفع ملف Credentials JSON")
+        
+        try:
+            import json
+            creds = json.loads(drive_creds['credentials_json'])
+            if 'type' in creds and 'project_id' in creds:
+                return APIConnection(service=service, status="success", message="✅ ملف Credentials JSON صحيح")
+            else:
+                return APIConnection(service=service, status="error", message="❌ ملف Credentials JSON غير صحيح")
+        except json.JSONDecodeError:
+            return APIConnection(service=service, status="error", message="❌ ملف JSON غير صالح")
+    
+    elif service == "google_sheets":
+        sheets_config = api_keys.get('google_sheets', {})
+        sheet_id = sheets_config.get('sheet_id')
+        
+        if not sheet_id:
+            return APIConnection(service=service, status="error", message="❌ لم يتم إدخال Sheet ID")
+        
+        if len(sheet_id) < 30:
+            return APIConnection(service=service, status="error", message="❌ Sheet ID غير صحيح. يجب أن يكون أطول من 30 حرف")
+        
+        return APIConnection(service=service, status="success", message="✅ Sheet ID محفوظ (يتطلب OAuth2 للاتصال الكامل)")
+    
+    return APIConnection(service=service, status="error", message="❌ خدمة غير معروفة")
 
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
