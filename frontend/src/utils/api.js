@@ -23,7 +23,8 @@ export const api = {
     getTopVideos: (limit = 10) => axios.get(`${API}/analytics/top-videos?limit=${limit}`)
   },
   trends: {
-    get: () => axios.get(`${API}/trends`)
+    get: () => axios.get(`${API}/trends`),
+    search: (keyword) => axios.get(`${API}/trends/search?keyword=${encodeURIComponent(keyword)}`)
   },
   campaigns: {
     getAll: () => axios.get(`${API}/campaigns`)
