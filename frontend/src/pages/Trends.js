@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { TrendingUp, Eye, Hash, Sparkles } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { TrendingUp, Eye, Hash, Sparkles, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
