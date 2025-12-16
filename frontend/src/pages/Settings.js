@@ -158,6 +158,14 @@ export default function Settings() {
                   placeholder="AIzaSy..."
                   data-testid="gemini-api-key-input"
                 />
+                <a 
+                  href="https://aistudio.google.com/app/apikey" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 text-sm font-tajawal inline-flex items-center gap-1"
+                >
+                  🔗 احصل على المفتاح من Google AI Studio
+                </a>
               </div>
               <div className="flex gap-3">
                 <Button
