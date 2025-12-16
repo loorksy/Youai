@@ -60,6 +60,9 @@ class VideoCreate(BaseModel):
     character_image_url: Optional[str] = None
     schedule_type: str = "immediate"
     scheduled_time: Optional[str] = None
+    content_provider: Optional[str] = "gemini"
+    selected_model: Optional[str] = None
+    model_purpose: Optional[str] = "content_generation"
 
 class Campaign(BaseModel):
     model_config = ConfigDict(extra="ignore")
