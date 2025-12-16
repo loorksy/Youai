@@ -16,7 +16,8 @@ export const api = {
   },
   settings: {
     updateApiKeys: (service, credentials) => axios.post(`${API}/settings/api-keys`, { service, credentials }),
-    testConnection: (service) => axios.post(`${API}/settings/test-connection?service=${service}`)
+    testConnection: (service) => axios.post(`${API}/settings/test-connection?service=${service}`),
+    getSavedKeys: () => axios.get(`${API}/settings/api-keys`)
   },
   analytics: {
     getOverview: () => axios.get(`${API}/analytics/overview`),
