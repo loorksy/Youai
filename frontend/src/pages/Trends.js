@@ -67,6 +67,39 @@ export default function Trends() {
         </p>
       </div>
 
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardContent className="p-6">
+          <form onSubmit={handleSearch} className="flex gap-3">
+            <Input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="ابحث عن ترندات في مجال معين (مثال: طبخ، تقنية، ألعاب)"
+              className="flex-1 bg-zinc-800/50 border-zinc-700 text-white text-right font-tajawal"
+              data-testid="search-trends-input"
+            />
+            <Button
+              type="submit"
+              disabled={searching}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-cairo"
+              data-testid="search-trends-button"
+            >
+              {searching ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white ml-2"></div>
+                  جاري البحث...
+                </>
+              ) : (
+                <>
+                  <Eye className="ml-2 h-4 w-4" />
+                  بحث
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {trends.map((trend, index) => (
           <Card key={index} className="bg-zinc-900 border-zinc-800 hover:border-orange-500/30 transition-all duration-300">
