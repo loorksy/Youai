@@ -283,6 +283,65 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-cairo font-bold text-white flex items-center">
+                    <Key className="ml-2 h-5 w-5 text-orange-500" />
+                    OpenRouter API
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400 font-tajawal">
+                    الوصول لجميع نماذج الذكاء الاصطناعي (GPT-4, Claude, Llama)
+                  </CardDescription>
+                </div>
+                {getStatusBadge(connections.openrouter)}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-right block font-tajawal text-zinc-300">
+                  API Key
+                </Label>
+                <Input
+                  type="password"
+                  value={apiKeys.openrouter.api_key}
+                  onChange={(e) => handleInputChange('openrouter', 'api_key', e.target.value)}
+                  className="bg-zinc-800/50 border-zinc-700 text-white text-right font-mono"
+                  placeholder="sk-or-..."
+                  data-testid="openrouter-api-key-input"
+                />
+                <a 
+                  href="https://openrouter.ai/keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 text-sm font-tajawal inline-flex items-center gap-1"
+                >
+                  🔗 احصل على المفتاح من OpenRouter
+                </a>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => handleSave('openrouter')}
+                  disabled={loading.openrouter}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 font-cairo"
+                  data-testid="openrouter-save-button"
+                >
+                  {loading.openrouter ? 'جاري الحفظ...' : 'حفظ'}
+                </Button>
+                <Button
+                  onClick={() => handleTestConnection('openrouter')}
+                  disabled={loading.openrouter_test}
+                  variant="outline"
+                  className="flex-1 border-zinc-700 text-white hover:bg-zinc-800 font-cairo"
+                  data-testid="openrouter-test-button"
+                >
+                  {loading.openrouter_test ? 'جاري الاختبار...' : 'اختبار الاتصال'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="youtube" className="space-y-6">
