@@ -108,6 +108,48 @@ export default function CreateVideo() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label className="text-right block font-tajawal text-zinc-300">
+                رفع صورة الشخصية (اختياري)
+              </Label>
+              <div className="border-2 border-dashed border-zinc-700 rounded-xl p-6 text-center hover:border-orange-500/50 transition-all duration-300">
+                {!characterImage ? (
+                  <div>
+                    <ImageIcon className="h-12 w-12 text-zinc-600 mx-auto mb-3" />
+                    <p className="text-zinc-400 font-tajawal mb-3">اسحب وأفلت الصورة هنا أو انقر للاختيار</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCharacterImageUpload}
+                      className="hidden"
+                      id="character-upload"
+                      data-testid="character-upload-input"
+                    />
+                    <label htmlFor="character-upload">
+                      <Button type="button" variant="outline" className="border-zinc-700 text-white hover:bg-zinc-800 font-cairo" asChild>
+                        <span>اختر صورة</span>
+                      </Button>
+                    </label>
+                    <p className="text-xs text-zinc-500 font-tajawal mt-2">PNG, JPG, WEBP (حد أقصى 5MB)</p>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <img src={characterImage} alt="معاينة الشخصية" className="max-h-48 mx-auto rounded-lg" />
+                    <Button
+                      type="button"
+                      onClick={removeCharacterImage}
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 left-2 font-cairo"
+                      data-testid="remove-character-image"
+                    >
+                      ✖ إزالة
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-right block font-tajawal text-zinc-300">
