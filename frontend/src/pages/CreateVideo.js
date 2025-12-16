@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { Play, Image as ImageIcon, Clock, Sparkles } from 'lucide-react';
+import { Play, Image as ImageIcon, Clock, Sparkles, Sliders } from 'lucide-react';
 
 export default function CreateVideo() {
   const navigate = useNavigate();
