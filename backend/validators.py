@@ -58,6 +58,22 @@ def validate_youtube_credentials(client_id: str, client_secret: str) -> Dict[str
         "errors": errors
     }
 
+def validate_openrouter_key(key: str) -> Dict[str, Any]:
+    """
+    يتحقق من صحة مفتاح OpenRouter API
+    """
+    if not key:
+        return {"valid": False, "error": "المفتاح فارغ"}
+    
+    # OpenRouter keys تبدأ بـ sk-or-
+    if not key.startswith('sk-or-') or len(key) < 30:
+        return {
+            "valid": False,
+            "error": "مفتاح OpenRouter غير صحيح. يجب أن يبدأ بـ sk-or-"
+        }
+    
+    return {"valid": True, "error": None}
+
 def validate_sheet_id(sheet_id: str) -> Dict[str, Any]:
     """
     يتحقق من صحة Sheet ID
