@@ -24,6 +24,34 @@ export default function CreateVideo() {
     schedule_type: 'immediate',
     scheduled_time: null
   });
+  const [characterImage, setCharacterImage] = useState(null);
+  const [videoDuration, setVideoDuration] = useState(60);
+  const [autoDuration, setAutoDuration] = useState(true);
+
+  const handleCharacterImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCharacterImage(e.target.result);
+        setFormData({ ...formData, character_image_url: e.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCharacterImage = () => {
+    setCharacterImage(null);
+    setFormData({ ...formData, character_image_url: null });
+  };
+
+  const getMaxDuration = () => {
+    return formData.ai_generator === 'sora2' ? 60 : 120;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
