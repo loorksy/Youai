@@ -217,6 +217,14 @@ export default function Settings() {
                   placeholder="kie_..."
                   data-testid="kie-api-key-input"
                 />
+                <a 
+                  href="https://kie.ai/dashboard/api-keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 text-sm font-tajawal inline-flex items-center gap-1"
+                >
+                  🔗 احصل على المفتاح من Kie.ai Dashboard
+                </a>
               </div>
               <div className="flex gap-3">
                 <Button
