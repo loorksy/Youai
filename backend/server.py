@@ -185,9 +185,9 @@ async def test_api_connection(service: str, current_user: dict = Depends(get_cur
         # الخطوة 2: اختبار الاتصال الحقيقي
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}",
-                    json={"contents": [{"parts": [{"text": "test connection"}]}]}
+                # استخدام endpoint الصحيح
+                response = await client.get(
+                    f"https://generativelanguage.googleapis.com/v1beta/models?key={gemini_key}"
                 )
                 
                 # الخطوة 3: التحقق من محتوى الاستجابة
