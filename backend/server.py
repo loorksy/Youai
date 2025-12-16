@@ -18,6 +18,17 @@ from models import (
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 import httpx
 from apscheduler.schedulers.background import BackgroundScheduler
+from validators import (
+    validate_gemini_key, 
+    validate_kie_key, 
+    validate_youtube_credentials,
+    validate_sheet_id
+)
+from encryption import (
+    encrypt_credentials, 
+    decrypt_credentials,
+    mask_credentials
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
